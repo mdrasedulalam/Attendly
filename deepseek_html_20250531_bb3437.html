@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Attendance System</title>
+
+<!-- Using jsPDF from CDN with fallback -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+:root {
+
+--primary-color: #4361ee;
+
+--secondary-color: #3f37c9;
+
+--accent-color: #4895ef;
+
+--success-color: #4cc9f0;
+
+--danger-color: #f72585;
+
+--light-color: #f8f9fa;
+
+--dark-color: #212529;
+
+--border-radius: 8px;
+
+}
+
+body {
+
+font-family: 'Poppins', sans-serif;
+
+background-color: #f5f7fa;
+
+color: var(--dark-color);
+
+padding: 15px;
+
+line-height: 1.5;
+
+}
+
+.header-box {
+
+background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+
+color: white;
+
+padding: 15px;
+
+text-align: center;
+
+margin-bottom: 20px;
+
+border-radius: var(--border-radius);
+
+}
+
+.header-box h1 {
+
+font-size: 1.5rem;
+
+margin: 5px 0;
+
+}
+
+.form-group {
+
+margin-bottom: 15px;
+
+}
+
+label {
+
+display: block;
+
+margin-bottom: 5px;
+
+font-weight: 500;
+
+display: flex;
+
+align-items: center;
+
+gap: 8px;
+
+}
+
+label i {
+
+color: var(--accent-color);
+
+}
+
+select, input[type="file"], input[type="date"] {
+
+width: 100%;
+
+padding: 10px;
+
+border: 1px solid #ddd;
+
+border-radius: var(--border-radius);
+
+font-family: 'Poppins', sans-serif;
+
+background-color: #f8f9fa;
+
+}
+
+.file-input-label {
+
+display: flex;
+
+align-items: center;
+
+justify-content: space-between;
+
+padding: 10px;
+
+border: 1px dashed #ddd;
+
+border-radius: var(--border-radius);
+
+background-color: #f8f9fa;
+
+cursor: pointer;
+
+}
+
+.file-input-label i {
+
+color: var(--accent-color);
+
+}
+
+.attendance-status {
+
+font-weight: 500;
+
+margin: 15px 0 10px 0;
+
+display: flex;
+
+align-items: center;
+
+gap: 8px;
+
+}
+
+.student-table {
+
+width: 100%;
+
+border-collapse: collapse;
+
+margin-bottom: 15px;
+
+}
+
+.student-table th, .student-table td {
+
+border: 1px solid #ddd;
+
+padding: 10px;
+
+text-align: left;
+
+}
+
+.student-table th {
+
+background-color: var(--primary-color);
+
+color: white;
+
+}
+
+.student-table tr:nth-child(even) {
+
+background-color: #f8f9fa;
+
+}
+
+.action-buttons {
+
+margin: 15px 0;
+
+display: flex;
+
+gap: 10px;
+
+flex-wrap: wrap;
+
+}
+
+button {
+
+padding: 10px 15px;
+
+color: white;
+
+border: none;
+
+border-radius: var(--border-radius);
+
+cursor: pointer;
+
+font-weight: 500;
+
+display: flex;
+
+align-items: center;
+
+gap: 8px;
+
+font-family: 'Poppins', sans-serif;
+
+}
+
+.primary-btn {
+
+background-color: var(--primary-color);
+
+}
+
+.secondary-btn {
+
+background-color: var(--accent-color);
+
+}
+
+.danger-btn {
+
+background-color: var(--danger-color);
+
+}
+
+.status-btn-group {
+
+display: flex;
+
+gap: 5px;
+
+}
+
+.status-btn {
+
+padding: 5px 10px;
+
+font-size: 12px;
+
+border-radius: 4px;
+
+display: flex;
+
+align-items: center;
+
+gap: 5px;
+
+}
+
+.present-btn {
+
+background-color: rgba(76, 201, 240, 0.2);
+
+color: #0077b6;
+
+}
+
+.present-btn.active-status {
+
+background-color: var(--success-color);
+
+color: white;
+
+}
+
+.absent-btn {
+
+background-color: rgba(248, 150, 30, 0.2);
+
+color: #e85d04;
+
+}
+
+.absent-btn.active-status {
+
+background-color: var(--danger-color);
+
+color: white;
+
+}
+
+.empty-state {
+
+text-align: center;
+
+padding: 20px;
+
+color: #6c757d;
+
+}
+
+.empty-state i {
+
+font-size: 2rem;
+
+color: #dee2e6;
+
+margin-bottom: 10px;
+
+}
+
+@media (max-width: 480px) {
+
+.action-buttons {
+
+flex-direction: column;
+
+}
+
+button {
+
+width: 100%;
+
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header-box">
+
+<h1><i class="fas fa-clipboard-check"></i> ATTENDANCE SYSTEM</h1>
+
+</div>
+
+<div class="form-group">
+
+<label for="course"><i class="fas fa-graduation-cap"></i> Select Course:</label>
+
+<select id="course">
+
+<option value="">-- Select Course --</option>
+
+<option value="0413-225 -- Human Resource Management">0413-225 -- Human Resource Management</option>
+
+<option value="0412-221 -- Financial Management">0412-221 -- Financial Management</option>
+
+<option value="0542-217 -- Statistics for Decision Making (LAB)">0542-217 -- Statistics for Decision Making (LAB)</option>
+
+<option value="0542-213 -- Statistics for Decision Making">0542-213 -- Statistics for Decision Making</option>
+
+<option value="0541-214 -- Differential and Integral Calculus">0541-214 -- Differential and Integral Calculus</option>
+
+</select>
+
+</div>
+
+<div class="form-group">
+
+<label for="section"><i class="fas fa-users"></i> Select Section:</label>
+
+<select id="section">
+
+<option value="">-- Select Section --</option>
+
+<option value="A">A</option>
+
+<option value="A1">A1</option>
+
+<option value="A2">A2</option>
+
+<option value="B">B</option>
+
+<option value="B1">B1</option>
+
+<option value="B2">B2</option>
+
+<option value="C">C</option>
+
+<option value="C1">C1</option>
+
+<option value="C2">C2</option>
+
+<option value="D">D</option>
+
+<option value="D1">D1</option>
+
+<option value="D2">D2</option>
+
+<option value="E">E</option>
+
+<option value="E1">E1</option>
+
+<option value="E2">E2</option>
+
+</select>
+
+</div>
+
+<div class="form-group">
+
+<label for="attendanceDate"><i class="far fa-calendar-alt"></i> Date:</label>
+
+<input type="date" id="attendanceDate">
+
+</div>
+
+<div class="form-group">
+
+<label for="studentFile"><i class="fas fa-file-excel"></i> Upload Student List:</label>
+
+<div class="file-input-label">
+
+<span id="fileName">Choose Excel file (.xls, .xlsx)</span>
+
+<i class="fas fa-cloud-upload-alt"></i>
+
+<input type="file" id="studentFile" accept=".xls,.xlsx" style="display: none;">
+
+</div>
+
+</div>
+
+<div class="attendance-status">
+
+<i class="fas fa-clipboard-list"></i>
+
+<span>Attendance Status: <span id="statusHeading">Present</span></span>
+
+</div>
+
+<div class="action-buttons">
+
+<button id="markAllPresent" class="secondary-btn">
+
+<i class="fas fa-check-circle"></i> Mark All Present
+
+</button>
+
+<button id="markAllAbsent" class="danger-btn">
+
+<i class="fas fa-times-circle"></i> Mark All Absent
+
+</button>
+
+<button id="generatePdf" class="primary-btn">
+
+<i class="fas fa-file-pdf"></i> Generate PDF
+
+</button>
+
+</div>
+
+<table class="student-table" id="studentTable">
+
+<thead>
+
+<tr>
+
+<th>S/N</th>
+
+<th><i class="fas fa-id-card"></i> Student ID</th>
+
+<th><i class="fas fa-user"></i> Student Name</th>
+
+<th><i class="fas fa-user-edit"></i> Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="studentList">
+
+<tr>
+
+<td colspan="4">
+
+<div class="empty-state">
+
+<i class="fas fa-user-graduate"></i>
+
+<p>No student data loaded</p>
+
+</div>
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<script>
+
+// Initialize the current date
+
+document.addEventListener('DOMContentLoaded', function() {
+
+const today = new Date();
+
+const dateStr = today.toISOString().split('T')[0];
+
+document.getElementById('attendanceDate').value = dateStr;
+
+// Set up file input
+
+document.getElementById('studentFile').addEventListener('change', handleFileUpload);
+
+document.querySelector('.file-input-label').addEventListener('click', function() {
+
+document.getElementById('studentFile').click();
+
+});
+
+});
+
+// File upload handler
+
+function handleFileUpload(e) {
+
+const file = e.target.files[0];
+
+if (!file) return;
+
+// Update file name display
+
+document.getElementById('fileName').textContent = file.name;
+
+const fileName = file.name.toLowerCase();
+
+if (!fileName.endsWith('.xls') && !fileName.endsWith('.xlsx')) {
+
+alert('Please upload an Excel file (.xls or .xlsx)');
+
+return;
+
+}
+
+const reader = new FileReader();
+
+reader.onload = function(e) {
+
+try {
+
+const data = new Uint8Array(e.target.result);
+
+const workbook = XLSX.read(data, { type: 'array' });
+
+const firstSheetName = workbook.SheetNames[0];
+
+const firstSheet = workbook.Sheets[firstSheetName];
+
+const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
+
+defval: "",
+
+raw: false
+
+});
+
+const studentData = jsonData.map(row => {
+
+const id = row['ID'] || row['Student ID'] || row['Id'] || row['StudentId'] || '';
+
+const name = row['Name'] || row['Student Name'] || row['Student'] || '';
+
+const cleanId = String(id).trim().replace(/\s+/g, ' ');
+
+return {
+
+ID: cleanId,
+
+Name: name
+
+};
+
+}).filter(student => student.ID && student.Name);
+
+if (studentData.length === 0) {
+
+alert('No valid student data found in the file');
+
+return;
+
+}
+
+displayStudentData(studentData);
+
+} catch (error) {
+
+alert('Error reading file. Please ensure it is a valid Excel file with proper student data.');
+
+console.error('Error:', error);
+
+}
+
+};
+
+reader.onerror = function() {
+
+alert('Error reading file');
+
+};
+
+reader.readAsArrayBuffer(file);
+
+}
+
+// Display student data
+
+function displayStudentData(students) {
+
+const tableBody = document.getElementById('studentList');
+
+tableBody.innerHTML = '';
+
+if (students.length === 0) {
+
+tableBody.innerHTML = `
+
+<tr>
+
+<td colspan="4">
+
+<div class="empty-state">
+
+<i class="fas fa-user-graduate"></i>
+
+<p>No student data found</p>
+
+</div>
+
+</td>
+
+</tr>
+
+`;
+
+return;
+
+}
+
+students.forEach((student, index) => {
+
+const row = document.createElement('tr');
+
+// Serial number
+
+const serialCell = document.createElement('td');
+
+serialCell.textContent = index + 1;
+
+row.appendChild(serialCell);
+
+// Student ID
+
+const idCell = document.createElement('td');
+
+idCell.textContent = student.ID;
+
+row.appendChild(idCell);
+
+// Student Name
+
+const nameCell = document.createElement('td');
+
+nameCell.textContent = student.Name;
+
+row.appendChild(nameCell);
+
+// Attendance Status Buttons
+
+const statusCell = document.createElement('td');
+
+const btnGroup = document.createElement('div');
+
+btnGroup.className = 'status-btn-group';
+
+const presentBtn = document.createElement('button');
+
+presentBtn.className = 'status-btn present-btn';
+
+presentBtn.innerHTML = '<i class="fas fa-check"></i> Present';
+
+presentBtn.onclick = function() {
+
+this.classList.add('active-status');
+
+absentBtn.classList.remove('active-status');
+
+this.dataset.status = 'present';
+
+};
+
+const absentBtn = document.createElement('button');
+
+absentBtn.className = 'status-btn absent-btn active-status';
+
+absentBtn.innerHTML = '<i class="fas fa-times"></i> Absent';
+
+absentBtn.onclick = function() {
+
+this.classList.add('active-status');
+
+presentBtn.classList.remove('active-status');
+
+this.dataset.status = 'absent';
+
+};
+
+// Default to Absent
+
+absentBtn.dataset.status = 'absent';
+
+presentBtn.dataset.status = '';
+
+btnGroup.appendChild(presentBtn);
+
+btnGroup.appendChild(absentBtn);
+
+statusCell.appendChild(btnGroup);
+
+row.appendChild(statusCell);
+
+tableBody.appendChild(row);
+
+});
+
+}
+
+// Mark all students present
+
+document.getElementById('markAllPresent').addEventListener('click', function() {
+
+const presentBtns = document.querySelectorAll('.present-btn');
+
+const absentBtns = document.querySelectorAll('.absent-btn');
+
+presentBtns.forEach(btn => {
+
+btn.classList.add('active-status');
+
+btn.dataset.status = 'present';
+
+});
+
+absentBtns.forEach(btn => {
+
+btn.classList.remove('active-status');
+
+btn.dataset.status = '';
+
+});
+
+document.getElementById('statusHeading').textContent = 'Present';
+
+});
+
+// Mark all students absent
+
+document.getElementById('markAllAbsent').addEventListener('click', function() {
+
+const presentBtns = document.querySelectorAll('.present-btn');
+
+const absentBtns = document.querySelectorAll('.absent-btn');
+
+presentBtns.forEach(btn => {
+
+btn.classList.remove('active-status');
+
+btn.dataset.status = '';
+
+});
+
+absentBtns.forEach(btn => {
+
+btn.classList.add('active-status');
+
+btn.dataset.status = 'absent';
+
+});
+
+document.getElementById('statusHeading').textContent = 'Absent';
+
+});
+
+// Generate PDF - Enhanced for AppGeyser compatibility
+
+document.getElementById('generatePdf').addEventListener('click', function() {
+
+try {
+
+// Check if jsPDF is properly loaded
+
+if (typeof window.jspdf === 'undefined') {
+
+alert('PDF library not loaded. Please check your internet connection and try again.');
+
+return;
+
+}
+
+const { jsPDF } = window.jspdf;
+
+const doc = new jsPDF();
+
+// Get course and section info
+
+const courseValue = document.getElementById('course').value;
+
+const section = document.getElementById('section').value;
+
+const date = document.getElementById('attendanceDate').value;
+
+if (!courseValue || !section) {
+
+alert('Please select both course and section');
+
+return;
+
+}
+
+// Check if any students are loaded
+
+const studentRows = document.querySelectorAll('#studentList tr');
+
+if (studentRows.length === 0 || (studentRows.length === 1 && studentRows[0].querySelector('.empty-state'))) {
+
+alert('No student data loaded. Please upload a student list first.');
+
+return;
+
+}
+
+// Extract course code and name
+
+const courseParts = courseValue.split(' -- ');
+
+const courseCode = courseParts[0] || '';
+
+const courseName = courseParts.slice(1).join(' -- ') || '';
+
+// Filter present students
+
+const presentStudents = [];
+
+studentRows.forEach((row, index) => {
+
+const presentBtn = row.querySelector('.present-btn');
+
+if (presentBtn && presentBtn.classList.contains('active-status')) {
+
+const id = row.cells[1].textContent.trim();
+
+const name = row.cells[2].textContent;
+
+presentStudents.push({
+
+serial: presentStudents.length + 1, // Continuous numbering
+
+id: id,
+
+name: name.toUpperCase()
+
+});
+
+}
+
+});
+
+if (presentStudents.length === 0) {
+
+alert('No students marked as present');
+
+return;
+
+}
+
+// PDF settings
+
+const pageWidth = doc.internal.pageSize.getWidth();
+
+const margin = 15;
+
+const tableWidth = pageWidth - 2 * margin;
+
+// Function to add watermark to each page
+function addWatermark(doc) {
+    const pageHeight = doc.internal.pageSize.getHeight();
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text("Made by Md Rashedul Alam", margin, pageHeight - 10);
+    doc.text("Class Representative", margin, pageHeight - 5);
+    doc.text("Section 66D /BBA/DIU", margin, pageHeight - 2);
+}
+
+// Header with course info (only on first page)
+
+doc.setFontSize(16);
+
+doc.setFont(undefined, 'bold');
+
+doc.text("ATTENDANCE LIST", pageWidth / 2, 15, { align: 'center' });
+
+doc.setFontSize(12);
+
+doc.setFont(undefined, 'normal');
+
+doc.text(`Course: ${courseName} (${courseCode})`, margin, 25);
+
+doc.text(`Section: ${section} | Date: ${date}`, margin, 32);
+
+// Draw a line separator
+
+doc.line(margin, 37, pageWidth - margin, 37);
+
+// Table settings
+
+const startY = 45;
+
+const rowHeight = 8;
+
+const headers = ["S/N", "Student Name", "Student ID", "Status"];
+
+const columnWidths = [15, 70, 50, 25];
+
+// Add watermark to first page
+addWatermark(doc);
+
+// Process students in batches of 25
+
+let currentPage = 1;
+
+let currentY = startY;
+
+for (let i = 0; i < presentStudents.length; i++) {
+
+// Add new page if needed (except for first student)
+
+if (i > 0 && i % 25 === 0) {
+
+doc.addPage();
+
+currentPage++;
+
+currentY = 20; // Start lower on subsequent pages
+
+// Add page number
+
+doc.setFontSize(10);
+
+doc.text(`Page ${currentPage}`, pageWidth - margin, 10, { align: 'right' });
+
+// Add watermark to new page
+addWatermark(doc);
+
+}
+
+// Draw table header on first row of each page
+
+if (i % 25 === 0) {
+
+doc.setFillColor(200, 200, 200);
+
+doc.rect(margin, currentY, tableWidth, rowHeight, 'F');
+
+doc.setTextColor(0, 0, 0);
+
+doc.setFont(undefined, 'bold');
+
+let xPos = margin;
+
+headers.forEach((header, col) => {
+
+doc.text(header, xPos + 2, currentY + rowHeight - 3);
+
+xPos += columnWidths[col];
+
+});
+
+currentY += rowHeight;
+
+doc.setFont(undefined, 'normal');
+
+}
+
+const student = presentStudents[i];
+
+// Alternate row colors
+
+if (i % 2 === 0) {
+
+doc.setFillColor(240, 240, 240);
+
+} else {
+
+doc.setFillColor(255, 255, 255);
+
+}
+
+doc.rect(margin, currentY, tableWidth, rowHeight, 'F');
+
+let xPos = margin;
+
+// Serial Number
+
+doc.text(student.serial.toString(), xPos + 2, currentY + rowHeight - 3);
+
+xPos += columnWidths[0];
+
+// Student Name
+
+doc.text(student.name, xPos + 2, currentY + rowHeight - 3);
+
+xPos += columnWidths[1];
+
+// Student ID
+
+doc.text(student.id, xPos + 2, currentY + rowHeight - 3);
+
+xPos += columnWidths[2];
+
+// Status
+
+doc.setTextColor(0, 100, 0);
+
+doc.text("Present", xPos + 2, currentY + rowHeight - 3);
+
+doc.setTextColor(0, 0, 0);
+
+currentY += rowHeight;
+
+}
+
+// Save PDF with a more compatible method
+
+try {
+
+const pdfBlob = doc.output('blob');
+
+const pdfUrl = URL.createObjectURL(pdfBlob);
+
+// Create a temporary link and trigger download
+
+const downloadLink = document.createElement('a');
+
+downloadLink.href = pdfUrl;
+
+downloadLink.download = `Attendance_${courseCode}_${section}_${date}.pdf`;
+
+document.body.appendChild(downloadLink);
+
+downloadLink.click();
+
+document.body.removeChild(downloadLink);
+
+// Revoke the object URL to free memory
+
+setTimeout(() => URL.revokeObjectURL(pdfUrl), 100);
+
+} catch (e) {
+
+// Fallback to standard save method if blob fails
+
+doc.save(`Attendance_${courseCode}_${section}_${date}.pdf`);
+
+}
+
+} catch (error) {
+
+console.error('PDF generation error:', error);
+
+alert('Error generating PDF. Please try again or check console for details.');
+
+}
+
+});
+
+</script>
+
+</body>
+
+</html>
